@@ -7,7 +7,8 @@ const modbus = require('jsmodbus')
 const netServer = new net.Server()
 const holding = Buffer.alloc(10000)
 const server = new modbus.server.TCP(netServer, {
-  holding: holding
+  holding: holding,
+//   coils: Buffer.from([0x55, 0x55, 0x55])
 });
 
 const { db } = require("./fb");
@@ -20,21 +21,32 @@ async function get(){
             id: doc.id,
             ...doc.data(),
         }));
-        console.log('tags :>> ', tags);
+        // console.log('tags :>> ', tags);
+        tags.forEach(element => {
+            console.log('element :>> ', element);
+            if(element.fc === 16){//register
+                // server.holding.writeFloatBE(element.value, 0)
+
+            }else if(element.fc === 15){//coil
+                // server.coils.writeUInt16BE(element.value, 0)
+
+            }
+        });
     }, err => {
       console.log(`Encountered error: ${err}`);
     });
 }
-async function post(value, address){
-    await db.collection("tags").add({
+async function post(value, address, fc){
+    await db.collection("tags").doc(fc+'-'+address).set({
         name: 'test post',
         value,
+        fc,
         address
       });
 }
 server.on('connection', function (client) {
     console.log('New Connection')
-    // get();
+    get();
     // post();
 })
 
@@ -54,28 +66,31 @@ server.on('readHoldingRegisters', function (request, response, send) {
 
 })
 
-server.on('preWriteSingleRegister', function (value, address) {
-    console.log('Write Single Register')
-    console.log('Original {register, value}: {', address, ',', server.holding.readUInt16BE(address), '}')
-})
+// server.on('preWriteSingleRegister', function (value, address) {
+//     console.log('Write Single Register')
+//     console.log('Original {register, value}: {', address, ',', server.holding.readUInt16BE(address), '}')
+// })
 
-server.on('WriteSingleRegister', function (value, address) {
-    console.log('New {register, value}: {', address, ',', server.holding.readUInt16BE(address), '}')
-})
+// server.on('WriteSingleRegister', function (value, address) {
+//     console.log('New {register, value}: {', address, ',', server.holding.readUInt16BE(address), '}')
+// })
 
-server.on('writeMultipleCoils', function (value) {
-    console.log('Write multiple coils - Existing: ', value)
-})
+// server.on('writeMultipleCoils', function (value) {
+//     console.log('Write multiple coils - Existing: ', value)
+// })
 
 server.on('postWriteMultipleCoils', function (value) {
     try {
         console.log();
         if(value._body){
-            console.log('value :>> ', value._body);
-            console.log('value._body._address :>> ', value._body._address);
+            const address = value._body._address;
+            const fc = value._body._fc;
+            console.log('fc :>> ', fc);
+            console.log('address :>> ', address);
             let arr = [...value._body._values];
-            console.log('_values :>> ', arr);
-            post(arr[0], value._body._address)
+            console.log('value._body._values :>> ', arr);
+            const val = arr[0];
+            post(val, address, fc);
         }
         
     } catch (error) {
@@ -88,13 +103,20 @@ server.on('postWriteMultipleCoils', function (value) {
 }) */
 
 server.on('postWriteMultipleRegisters', function (value) {
-  console.log('Write multiple registers - Complete: ', holding.readUInt16BE(0))
-})
-
-server.on('connection', function (client) {
-
-  /* work with the modbus tcp client */
-
+    try {
+        console.log();
+        if(value._body){  
+            const address = value._body._address;
+            const fc = value._body._fc;
+            console.log('fc :>> ', fc);
+            console.log('address :>> ', address);
+            const val = value._body._values.readFloatBE()
+            console.log('val :>> ', val);
+            post(val, address, fc);
+        }
+    } catch (error) {
+        console.log('error :>> ', error);
+    }
 })
 
 server.coils.writeUInt16BE(0x0000, 0)
@@ -103,7 +125,6 @@ server.coils.writeUInt16BE(0x0000, 4)
 server.coils.writeUInt16BE(0x0000, 6)
 
 server.discrete.writeUInt16BE(0x5678, 0)
-
 server.holding.writeUInt16BE(0x0000, 0)
 server.holding.writeUInt16BE(0x0000, 2)
 

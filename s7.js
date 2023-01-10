@@ -2,22 +2,15 @@ var nodes7 = require('nodes7'); // This is the package name, if the repository i
 var conn = new nodes7;
 var doneReading = false;
 var doneWriting = false;
+var tags = {};
 
 var variables = {
-    //   TEST1: 'MR4',          // Memory real at MD4
       TEST2: 'M0.0',        // Bit at M32.2
       TEST3: 'M0.1',        // Bit at M20.0
       TEST4: 'M0.2',        // Bit at M20.0
-    //   TEST4: 'DB1,REAL0.20', // Array of 20 values in DB1
-    //   TEST5: 'DB1,REAL4',    // Single real value
-      // TEST6: 'DB1,REAL8',    // Another single real value
-    //   TEST7: 'DB1,INT12.2',  // Two integer value array
-    //   TEST8: 'DB1,LREAL4',   // Single 8-byte real value
-    //   TEST9: 'DB1,X14.0',    // Single bit in a data block
-    //   TEST10: 'DB1,X14.0.8'  // Array of 8 bits in a data block
 };
 
-conn.initiateConnection({ port: 102, host: '10.27.20.82', rack: 0, slot: 2, debug: false }, connected); // slot 2 for 300/400, slot 1 for 1200/1500, change debug to true to get more info
+conn.initiateConnection({ port: 102, host: '192.168.0.103', rack: 0, slot: 2, debug: false }, connected); // slot 2 for 300/400, slot 1 for 1200/1500, change debug to true to get more info
 // conn.initiateConnection({port: 102, host: '192.168.0.2', localTSAP: 0x0100, remoteTSAP: 0x0200, timeout: 8000, doNotOptimize: true}, connected);
 // local and remote TSAP can also be directly specified instead. The timeout option specifies the TCP timeout.
 
@@ -28,21 +21,31 @@ function connected(err) {
     process.exit();
   }
   conn.setTranslationCB(function(tag) { return variables[tag]; }); // This sets the "translation" to allow us to work with object names
-//   conn.addItems(['TEST1', 'TEST4']);
   conn.addItems('TEST4');
-  // conn.addItems('TEST4');
-  // conn.removeItems(['TEST2', 'TEST3']); // We could do this.
-  // conn.writeItems(['TEST5', 'TEST6'], [ 867.5309, 9 ], valuesWritten); // You can write an array of items as well.
-  // conn.writeItems('TEST7', [666, 777], valuesWritten); // You can write a single array item too.
-  // conn.writeItems('TEST4', true, valuesWritten); // This writes a single boolean item (one bit) to true
-  conn.readAllItems(valuesReady);
+  setInterval(() => {
+    conn.readAllItems(valuesReady);
+  }, 500);
 }
 
 function valuesReady(anythingBad, values) {
   if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
-  console.log('values',values);
-  doneReading = true;
-  if (doneWriting) { process.exit(); }
+  var tagsOld = JSON.parse(JSON.stringify(tags));
+  tags = values;
+  var changedTags = {};
+  for (let i = 0; i < Object.keys(tags).length; i++) {
+    const key = Object.keys(tags)[i];
+    const value = Object.values(tags)[i];
+    if(!(key in tagsOld) || value !== tagsOld[key]){
+      changedTags[key] = Object.values(tags)[i];
+    }
+    
+  }
+  if(Object.keys(changedTags).length > 0){
+    console.log('changedTags', changedTags);
+  }
+  // conn.readAllItems(valuesReady);
+  // doneReading = true;
+  // if (doneWriting) { process.exit(); }
 }
 
 function valuesWritten(anythingBad) {

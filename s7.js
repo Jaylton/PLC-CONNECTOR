@@ -21,6 +21,7 @@ function connected(err) {
     process.exit();
   }
   conn.setTranslationCB(function(tag) { return variables[tag]; }); // This sets the "translation" to allow us to work with object names
+  conn.setTranslationCB(function(tag) { return variables[tag]; }); // This sets the "translation" to allow us to work with object names
   conn.addItems('TEST4');
   setInterval(() => {
     conn.readAllItems(valuesReady);

@@ -1,14 +1,27 @@
 {
     "name": "my-awesome-package",
     "version": "1.0.0",
+    "license": "MIT",
+    "main": "main.js",
     "author": "Your Name <email@example.com>",
+    "scripts": {
+        "start": "electron .",
+        "start:nodemon": "nodemon --watch main.js --exec npm start"
+    },
     "dependencies": {
+        "bootstrap": "^5.2.3",
         "firebase": "^9.15.0",
         "firebase-admin": "^11.4.1",
         "firebase-functions": "^4.1.1",
+        "jquery": "^3.6.3",
         "jsmodbus": "^4.0.6",
+        "nodemon": "^2.0.20",
         "nodepccc": "^0.1.17",
         "nodes7": "^0.3.18",
+        "popper.js": "^1.16.1",
         "rxjs": "^7.8.0"
+    },
+    "devDependencies": {
+        "electron": "^22.0.2"
     }
 }

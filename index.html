@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' gap:; script-src 'self' data: https://ssl.gstatic.com 'unsafe-eval'; object-src *; style-src 'self' data: 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; font-src 'self' data:; connect-src *">
+    <title>Hello World!</title>
+    <link rel = "stylesheet"  href = "./node_modules/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12 my-2 header">
+                <div class="row">
+                    <h4>Connection</h4>
+                    <div class="col-md-3">
+                        <label for="">PLC address</label>
+                        <input type="text" class="form-control" id="plc_address" value="192.168.0.21" placeholder="PLC address">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="">PLC rack</label>
+                        <input type="text" class="form-control" id="plc_rack" value="0" placeholder="PLC rack">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="">PLC slot</label>
+                        <input type="text" class="form-control" id="plc_slot" value="2" placeholder="PLC slot">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end pt-1">
+                        <button class="btn btn-success " id="connect">Connect</button>
+                    </div>
+                </div>
+                <hr>
+                <div class="alert alert-danger d-none" id="status" role="alert">
+                </div>
+            </div>
+            <div class="col-6">
+                <h4>New tag</h4>
+                <form id="new-tag-form">
+                    <div class="mt-2">
+                        <label for="">Address</label>
+                        <input type="text" class="form-control" id="address" placeholder="Address">
+                    </div>
+                    <button type="submit" class="btn btn-success mt-2" id="connect">Connect</button>
+
+                </form>
+            </div>
+            <div class="col-6">
+                <h4>Tags</h4>
+                <div class="tag-list">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    
+  </body>
+<!-- <script type="text/javascript" >require('popper.js');</script>
+<script type="text/javascript" >require('bootstrap');</script> -->
+</html>

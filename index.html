@@ -8,7 +8,7 @@
     <meta name="msapplication-tap-highlight" content="no" />
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' gap:; script-src 'self' data: https://ssl.gstatic.com 'unsafe-eval'; object-src *; style-src 'self' data: 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; font-src 'self' data:; connect-src *">
-    <title>Hello World!</title>
+    <title>PLC Connector</title>
     <link rel = "stylesheet"  href = "./node_modules/bootstrap/dist/css/bootstrap.min.css" />
   </head>
   <body>
@@ -30,7 +30,8 @@
                         <input type="text" class="form-control" id="plc_slot" value="2" placeholder="PLC slot">
                     </div>
                     <div class="col-md-3 d-flex align-items-end pt-1">
-                        <button class="btn btn-success " id="connect">Connect</button>
+                        <button class="btn btn-success" id="connect">Connect</button>
+                        <button class="btn btn-danger d-none ms-2" id="disconnect">Disconnect</button>
                     </div>
                 </div>
                 <hr>

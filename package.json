@@ -1,9 +1,9 @@
 {
-    "name": "my-awesome-package",
+    "name": "plc-connector",
     "version": "1.0.0",
     "license": "MIT",
     "main": "main.js",
-    "author": "Your Name <email@example.com>",
+    "author": "Jaylton Alencar <jaylton.alencar@ufpe.br>",
     "scripts": {
         "start": "electron .",
         "start:nodemon": "nodemon --watch main.js --exec npm start"

@@ -27,25 +27,40 @@ window.onload = () => {
                 return false;
             }
             $('#status').addClass('d-none');
+            $('#disconnect').removeClass('d-none');
             $('#connect').html('Connected').prop('disabled', true);
 
             get();
             connected = true;
             setInterval(() => {
-            if(firstLoad && connected){
-                conn.readAllItems(valuesReady);
-            }
+                if(firstLoad && connected){
+                    conn.readAllItems(valuesReady);
+                }
             }, 500);
             
         });
     });
     
+    $('#disconnect').on('click', function(){
+        conn.dropConnection();
+        connected = false;
+        $('#connect').html('Connect').prop('disabled', false);
+        $('#disconnect').addClass('d-none');
+    })
+
     $(document.body).on('change', '.bool-tag', function(){
-        const val = $(this).val();
         const id = $(this).data('id');
         
         let payload = {};
         payload[id] = this.checked;
+        post(payload);
+    });
+    
+    $(document.body).on('change', '.decimal-tag', function(){
+        const val = $(this).val();
+        const id = $(this).data('id');
+        let payload = {[id]: parseInt(val)};
+        console.log('payload :>> ', payload);
         post(payload);
     });
 
@@ -75,12 +90,21 @@ window.onload = () => {
             let tagsHtml = '';
             tag_list.forEach(element => {
                 object[element.id] = element.value;
-                tagsHtml += `
-                    <div class="form-check form-switch">
-                        <input class="form-check-input bool-tag" value="1" type="checkbox" ${element.value ? 'checked' : ''} data-id="${element.id}" id="checkbox_${element.id}">
-                        <label class="form-check-label" for="checkbox_${element.id}">${element.id}</label>
-                    </div>
-                `
+                if(element.type === "boolean"){
+                    tagsHtml += `
+                        <div class="form-check form-switch">
+                            <input class="form-check-input bool-tag" value="1" type="checkbox" ${element.value ? 'checked' : ''} data-id="${element.id}" id="checkbox_${element.id}">
+                            <label class="form-check-label" for="checkbox_${element.id}">${element.id}</label>
+                        </div>
+                    `;
+                }else{
+                    tagsHtml += `
+                        <div class="input-group mt-1">
+                            <span class="input-group-text">${element.address}</span>
+                            <input type="text" class="form-control decimal-tag" value="${element.value}" id="input_${element.id}" data-id="${element.id}"/>
+                        </div>
+                    `;
+                }
             });
             $('.tag-list').html(tagsHtml);
             var changedTags = getChangedTags(object);
@@ -103,7 +127,8 @@ window.onload = () => {
         Object.keys(values).forEach((el, i) => {
             const doc = {
                 address: el,
-                value: values[el]
+                value: values[el],
+                type: typeof values[el] === 'boolean' ? 'boolean' : 'decimal'
             }
             batch.set(db.collection('tags_s7').doc(el), doc);
         });

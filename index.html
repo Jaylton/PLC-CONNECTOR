@@ -42,10 +42,25 @@
                 <h4>New tag</h4>
                 <form id="new-tag-form">
                     <div class="mt-2">
-                        <label for="">Address</label>
-                        <input type="text" class="form-control" id="address" placeholder="Address">
+                        <label for="">Type</label>
+                        <select name="" id="type" required class="form-select">
+                            <option value="I">Input</option>
+                            <option selected value="M">Memory</option>
+                            <option value="Q">Output</option>
+                        </select>
                     </div>
-                    <button type="submit" class="btn btn-success mt-2" id="connect">Connect</button>
+                    <div class="mt-2">
+                        <label for="">Format</label>
+                        <select id="format" required class="form-select">
+                            <option selected value="boolean">Boolean</option>
+                            <option value="decimal">Decimal</option>
+                        </select>
+                    </div>
+                    <div class="mt-2">
+                        <label for="">Address</label>
+                        <input type="text" required class="form-control" id="address" placeholder="Address">
+                    </div>
+                    <button type="submit" class="btn btn-success mt-2" id="save">Save</button>
 
                 </form>
             </div>

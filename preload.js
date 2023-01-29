@@ -49,27 +49,54 @@ window.onload = () => {
     })
 
     $(document.body).on('change', '.bool-tag', function(){
-        const id = $(this).data('id');
-        
-        let payload = {};
-        payload[id] = this.checked;
-        post(payload);
+        const type = $(this).data('type');
+        if(type === 'M'){
+            const id = $(this).data('id');
+            let payload = {};
+            payload[id] = this.checked;
+
+            post(payload);
+        }
     });
     
     $(document.body).on('change', '.decimal-tag', function(){
-        const val = $(this).val();
-        const id = $(this).data('id');
-        let payload = {[id]: parseInt(val)};
-        console.log('payload :>> ', payload);
-        post(payload);
+        const type = $(this).data('type');
+        if(type === 'M'){
+            const val = $(this).val();
+            const id = $(this).data('id');
+            let payload = {[id]: parseInt(val)};
+            
+            post(payload);
+        }
     });
 
     $(document.body).on('submit', '#new-tag-form', function(e){
         e.preventDefault();
-
-        const address = $('#address').val();
+        $('#address').removeClass('is-invalid')
+        const format = $('#format').val();
+        let address = $('#address').val();
+        let value;
+        if(format === 'boolean'){
+            const userKeyRegExp = /^\d+\.[0-7]{1}?$/;
+            const valid = userKeyRegExp.test(address);
+            if(!valid){ // validate bit address
+              $('#address').addClass('is-invalid')
+              return false;
+            }
+            value = false;
+          }else{
+            const userKeyRegExp = /^[B]\d+?$/;
+            const valid = userKeyRegExp.test(address);
+            if(!valid){ // validate word address
+                $('#address').addClass('is-invalid')
+              return false;
+            }
+            value = 0;
+          }
+        address = $('#type').val()+ address; 
         let payload = {};
-        payload[address] = false;
+        payload[address] = value;
+        
         post(payload);
         $('#address').val('');
     });
@@ -90,10 +117,10 @@ window.onload = () => {
             let tagsHtml = '';
             tag_list.forEach(element => {
                 object[element.id] = element.value;
-                if(element.type === "boolean"){
+                if(element.format === "boolean"){
                     tagsHtml += `
                         <div class="form-check form-switch">
-                            <input class="form-check-input bool-tag" value="1" type="checkbox" ${element.value ? 'checked' : ''} data-id="${element.id}" id="checkbox_${element.id}">
+                            <input class="form-check-input bool-tag" value="1" ${element.type !== 'M' ? 'disabled' : ''} type="checkbox" ${element.value ? 'checked' : ''} data-type="${element.type}" data-id="${element.id}" id="checkbox_${element.id}">
                             <label class="form-check-label" for="checkbox_${element.id}">${element.id}</label>
                         </div>
                     `;
@@ -101,19 +128,21 @@ window.onload = () => {
                     tagsHtml += `
                         <div class="input-group mt-1">
                             <span class="input-group-text">${element.address}</span>
-                            <input type="text" class="form-control decimal-tag" value="${element.value}" id="input_${element.id}" data-id="${element.id}"/>
+                            <input type="text" class="form-control decimal-tag" ${element.type !== 'M' ? 'disabled' : ''} value="${element.value}" id="input_${element.id}" data-type="${element.type}" data-id="${element.id}"/>
                         </div>
                     `;
                 }
             });
             $('.tag-list').html(tagsHtml);
+            var tags_label = Object.keys(object);
+            conn.addItems(tags_label);// add tags
+
             var changedTags = getChangedTags(object);
             var labels = Object.keys(changedTags);
             var values = Object.values(changedTags);
             
             if(connected && labels.length > 0 && values.length > 0){
-                conn.addItems(labels);
-                conn.writeItems(labels, values, valuesWritten);
+                conn.writeItems(labels, values, valuesWritten);// write tags
             }
             console.log('changedTags :>> ', changedTags);
     
@@ -128,7 +157,8 @@ window.onload = () => {
             const doc = {
                 address: el,
                 value: values[el],
-                type: typeof values[el] === 'boolean' ? 'boolean' : 'decimal'
+                type: el[0],
+                format: typeof values[el] === 'boolean' ? 'boolean' : 'decimal'
             }
             batch.set(db.collection('tags_s7').doc(el), doc);
         });

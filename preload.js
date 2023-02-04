@@ -36,7 +36,7 @@ window.onload = () => {
                 if(firstLoad && connected){
                     conn.readAllItems(valuesReady);
                 }
-            }, 500);
+            }, 1000);
             
         });
     });
@@ -59,12 +59,12 @@ window.onload = () => {
         }
     });
     
-    $(document.body).on('change', '.decimal-tag', function(){
+    $(document.body).on('change', '.number-tag', function(){
         const type = $(this).data('type');
         if(type === 'M'){
             const val = $(this).val();
             const id = $(this).data('id');
-            let payload = {[id]: parseInt(val)};
+            let payload = {[id]: id.includes('R') ? parseFloat(val) : parseInt(val)};
             
             post(payload);
         }
@@ -84,15 +84,15 @@ window.onload = () => {
               return false;
             }
             value = false;
-          }else{
-            const userKeyRegExp = /^[B]\d+?$/;
+        }else{
+            const userKeyRegExp = /^[B,R]\d+?$/;
             const valid = userKeyRegExp.test(address);
             if(!valid){ // validate word address
                 $('#address').addClass('is-invalid')
               return false;
             }
             value = 0;
-          }
+        }
         address = $('#type').val()+ address; 
         let payload = {};
         payload[address] = value;
@@ -115,8 +115,10 @@ window.onload = () => {
                 firstLoad = true;
             }
             let tagsHtml = '';
+
+            //render tags
             tag_list.forEach(element => {
-                object[element.id] = element.value;
+                object[element.address.replace('D','R')] = element.value;
                 if(element.format === "boolean"){
                     tagsHtml += `
                         <div class="form-check form-switch">
@@ -128,7 +130,7 @@ window.onload = () => {
                     tagsHtml += `
                         <div class="input-group mt-1">
                             <span class="input-group-text">${element.address}</span>
-                            <input type="text" class="form-control decimal-tag" ${element.type !== 'M' ? 'disabled' : ''} value="${element.value}" id="input_${element.id}" data-type="${element.type}" data-id="${element.id}"/>
+                            <input type="text" class="form-control number-tag" ${element.type !== 'M' ? 'disabled' : ''} value="${Math.round(element.value*1000)/1000}" id="input_${element.id}" data-type="${element.type}" data-id="${element.id}"/>
                         </div>
                     `;
                 }
@@ -137,6 +139,8 @@ window.onload = () => {
             var tags_label = Object.keys(object);
             conn.addItems(tags_label);// add tags
 
+            toDelete(tag_list); // check if has tags to delete
+            
             var changedTags = getChangedTags(object);
             var labels = Object.keys(changedTags);
             var values = Object.values(changedTags);
@@ -154,11 +158,12 @@ window.onload = () => {
     function post(values){
         var batch = db.batch();
         Object.keys(values).forEach((el, i) => {
+            el = el.replace('D','R');
             const doc = {
                 address: el,
                 value: values[el],
                 type: el[0],
-                format: typeof values[el] === 'boolean' ? 'boolean' : 'decimal'
+                format: typeof values[el] === 'boolean' ? 'boolean' : 'number'
             }
             batch.set(db.collection('tags_s7').doc(el), doc);
         });
@@ -175,20 +180,34 @@ window.onload = () => {
         }
         var changedTags = {};
         for (let i = 0; i < Object.keys(tags).length; i++) {
-        const key = Object.keys(tags)[i];
-        const value = Object.values(tags)[i];
-        if(!(key in tagsOld) || value !== tagsOld[key]){
-            changedTags[key] = Object.values(tags)[i];
-        }
+            const key = Object.keys(tags)[i];
+            const value = Object.values(tags)[i];
+            if(!(key in tagsOld) || value !== tagsOld[key]){
+                changedTags[key] = Object.values(tags)[i];
+            }
         }
         return changedTags;
+    }
+    
+    function toDelete(list){
+        var labels = list.map(x => x.address);
+        var tagsOld = JSON.parse(JSON.stringify(tags));
+        
+        for (let i = 0; i < Object.keys(tagsOld).length; i++) {
+            const key = Object.keys(tagsOld)[i];
+            if(!(key in labels)){
+                delete tags[key];
+                conn.removeItems(key);
+            }
+        }
+        return true;
     }
     
     function valuesReady(anythingBad, values) {
         if (anythingBad) { console.log("SOMETHING WENT WRONG READING VALUES!!!!"); }
         var changedTags = getChangedTags(values);
         if(firstLoad && Object.keys(changedTags).length > 0){
-        post(changedTags)
+            post(changedTags)
         }
         // conn.readAllItems(valuesReady);
         // doneReading = true;
@@ -202,6 +221,8 @@ window.onload = () => {
         // doneWriting = true;
         // if (doneReading) { process.exit(); }
     }
-  }
-window.addEventListener('DOMContentLoaded', () => {
-})
+
+    function isInt(n){
+        return Number(n) === n && n % 1 === 0;
+    }
+}
